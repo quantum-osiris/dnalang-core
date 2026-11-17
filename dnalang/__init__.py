@@ -17,3 +17,22 @@ from .action_dsl import parse_sexpr, to_sexpr, validate, Interpreter, Context, r
 from .regulation import Trigger      # noqa: F401
 
 __version__ = "0.4.0"
+
+from .seq_ops import (  # noqa: F401
+    ACTIVE_SUBSTRATE,
+    BinarySeqOpNode,
+    CodonOp,
+    DnaLangLowerer,
+    DnaTypeError,
+    EpigeneticMaskNode,
+    GateMnemonic,
+    GeneNode,
+    LoweringConfig,
+    MultiTypedDispatcher,
+    OpKind,
+    QuantumCircuitIR,
+    QuantumStateNode,
+    SubstrateProfile,
+    TranscriptSeqNode,
+    probe_substrate,
+)
