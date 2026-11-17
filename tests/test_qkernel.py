@@ -222,3 +222,29 @@ def test_end_to_end_small_run(tmp_path):
     assert (tmp_path / "circuits" / "fidelity_zz.qasm").exists()
     kinds = [line.split('"kind":"')[1].split('"')[0] for line in (tmp_path / "ledger.jsonl").read_text().splitlines()]
     assert kinds[0] == "qkernel.preregister" and kinds[-1] == "qkernel.result"
+
+
+def test_import_qkernel_is_lazy_and_avoids_eager_numpy():
+    import os
+    import subprocess
+    import sys
+    from pathlib import Path
+
+    repo_root = str(Path(__file__).resolve().parents[1])
+    env = dict(os.environ, PYTHONPATH=repo_root)
+    proc = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            (
+                "import sys, dnalang, dnalang.qkernel; "
+                "assert 'numpy' not in sys.modules; "
+                "assert 'PrecomputedSVC' in dir(dnalang.qkernel)"
+            ),
+        ],
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert proc.returncode == 0, proc.stderr
