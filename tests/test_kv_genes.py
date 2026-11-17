@@ -1,5 +1,6 @@
 """Key-value genes: rule and regulator kinds under one `gene` keyword, sections, the 2025
 dialect, lowering to RuleSet / RegulatoryGraph, diagnostics, action DSL, triggers."""
+from pathlib import Path
 import pytest
 
 from dnalang import Trigger, check, lower_all, parse, run_action
@@ -58,7 +59,8 @@ def test_legacy_2025_dialect_parses():
 
 
 def test_circuit_organisms_unchanged():
-    org = parse(open("examples/dd_staggered_xy4.dna").read())
+    ex = Path(__file__).resolve().parents[1] / "examples" / "dd_staggered_xy4.dna"
+    org = parse(ex.read_text())
     assert org.kv_genes == [] and check(org).ok()
     assert lower_all(org)["circuit"].n_qubits == 4
 

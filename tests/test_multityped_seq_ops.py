@@ -174,3 +174,39 @@ def test_probe_substrate_integrates_with_osiris_hardware_mesh_and_s26_edge(monke
     s26_prof = probe_substrate()
     assert s26_prof == SubstrateProfile("Node_Alpha_Edge", "aarch64", 300.0, 256)
 
+    explicit = probe_substrate(
+        profile=types.SimpleNamespace(
+            machine_arch="x86_64", is_termux=False, is_android=False, execution_timeout_s=1800
+        )
+    )
+    assert explicit == SubstrateProfile("Node_Beta_Workstation", "x86_64", 1800.0, 4096)
+
+
+def test_import_dnalang_and_qkernel_are_isolated_from_cross_repo_and_eager_numpy(tmp_path):
+    import os
+    import subprocess
+    import sys
+    from pathlib import Path
+
+    # Plant a broken osiris_hardware_mesh.py on PYTHONPATH: dnalang must never import it.
+    (tmp_path / "osiris_hardware_mesh.py").write_text("raise RuntimeError('must not be imported')\n")
+    repo_root = str(Path(__file__).resolve().parents[1])
+    env = dict(os.environ)
+    env["PYTHONPATH"] = f"{tmp_path}:{repo_root}"
+    proc = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            (
+                "import sys, dnalang, dnalang.qkernel; "
+                "assert 'osiris_hardware_mesh' not in sys.modules; "
+                "assert 'numpy' not in sys.modules; "
+                "assert 'PrecomputedSVC' in dir(dnalang.qkernel)"
+            ),
+        ],
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert proc.returncode == 0, proc.stderr

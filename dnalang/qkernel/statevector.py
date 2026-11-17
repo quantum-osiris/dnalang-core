@@ -30,7 +30,8 @@ def simulate(t: Template, X: np.ndarray) -> np.ndarray:
     B, n = X.shape[0], t.n_qubits
     psi = np.zeros((B,) + (2,) * n, dtype=complex)
     psi[(slice(None),) + (0,) * n] = 1.0
-    ax = lambda q: 1 + (n - 1 - q)  # tensor axis of qubit q
+    def ax(q: int) -> int:
+        return 1 + (n - 1 - q)  # tensor axis of qubit q
     for g, qs, p in t.ops:
         if g == "h":
             psi = np.moveaxis(np.tensordot(psi, _H, axes=([ax(qs[0])], [1])), -1, ax(qs[0]))

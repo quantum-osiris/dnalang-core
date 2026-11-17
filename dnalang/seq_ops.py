@@ -11,6 +11,7 @@ import hashlib
 import math
 import os
 import platform
+import sys
 from dataclasses import dataclass, field, replace
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Tuple
@@ -31,27 +32,38 @@ class SubstrateProfile:
     max_circuit_depth: int
 
 
-def probe_substrate() -> SubstrateProfile:
-    """Dynamically detects Node Alpha (ARM64 mobile edge / S26 Ultra Termux) vs Node Beta (x86_64)."""
+def _coerce_substrate_profile(prof: Any) -> SubstrateProfile:
+    if isinstance(prof, SubstrateProfile):
+        return prof
+    arch = str(getattr(prof, "machine_arch", "") or platform.machine()).lower()
+    is_edge = bool(
+        getattr(prof, "is_termux", False)
+        or getattr(prof, "is_android", False)
+        or arch in ("aarch64", "arm64")
+    )
+    timeout_s = float(getattr(prof, "execution_timeout_s", 300.0 if is_edge else 1800.0))
+    if is_edge:
+        return SubstrateProfile("Node_Alpha_Edge", arch or "aarch64", timeout_s, 256)
+    return SubstrateProfile("Node_Beta_Workstation", arch or "x86_64", timeout_s, 4096)
+
+
+def probe_substrate(profile: Any = None) -> SubstrateProfile:
+    """Detects Node Alpha (ARM64 mobile edge) vs Node Beta (x86_64) without cross-repo imports.
+
+    Callers in runtime packages may pass an explicit ``profile`` object. If none is passed,
+    only an already-loaded ``osiris_hardware_mesh`` entry in ``sys.modules`` is consulted;
+    ``dnalang`` never imports ``osiris_hardware_mesh`` itself.
+    """
+    if profile is not None:
+        return _coerce_substrate_profile(profile)
     try:
-        import osiris_hardware_mesh  # type: ignore
-        fn = getattr(osiris_hardware_mesh, "get_current_profile", None) or getattr(
-            osiris_hardware_mesh, "get_active_profile", None
-        )
-        if callable(fn):
-            prof = fn()
-            if isinstance(prof, SubstrateProfile):
-                return prof
-            arch = str(getattr(prof, "machine_arch", "") or platform.machine()).lower()
-            is_edge = bool(
-                getattr(prof, "is_termux", False)
-                or getattr(prof, "is_android", False)
-                or arch in ("aarch64", "arm64")
+        loaded_mesh = sys.modules.get("osiris_hardware_mesh")
+        if loaded_mesh is not None:
+            fn = getattr(loaded_mesh, "get_current_profile", None) or getattr(
+                loaded_mesh, "get_active_profile", None
             )
-            timeout_s = float(getattr(prof, "execution_timeout_s", 300.0 if is_edge else 1800.0))
-            if is_edge:
-                return SubstrateProfile("Node_Alpha_Edge", arch or "aarch64", timeout_s, 256)
-            return SubstrateProfile("Node_Beta_Workstation", arch or "x86_64", timeout_s, 4096)
+            if callable(fn):
+                return _coerce_substrate_profile(fn())
     except Exception:
         pass
     arch = platform.machine().lower()
