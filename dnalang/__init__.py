@@ -11,6 +11,13 @@ from .parser import parse            # noqa: F401
 from .sema import check              # noqa: F401
 from .lower import lower, strip_barriers  # noqa: F401
 from .qc_ir import Circuit, Op       # noqa: F401
+from .timing import (                # noqa: F401
+    CompilerContractError,
+    IRValidationError,
+    QuantizedDelayRecord,
+    TimingError,
+    TimingResolutionReport,
+)
 from .ledger import Ledger           # noqa: F401
 from .rules_ir import RuleSet, RegulatoryGraph, lower_rules, lower_regulation, lower_all  # noqa: F401
 from .action_dsl import parse_sexpr, to_sexpr, validate, Interpreter, Context, run_action  # noqa: F401

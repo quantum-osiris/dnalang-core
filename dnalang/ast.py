@@ -7,6 +7,7 @@ typed formal qubit ports. Nothing here is executed; it is data.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from fractions import Fraction
 from typing import List, Optional, Union
 
 
@@ -24,6 +25,8 @@ class Pos:
 class Const:
     value: float
     pos: Pos
+    exact: Optional[Fraction] = None
+    dim: str = "scalar"
 
 
 @dataclass

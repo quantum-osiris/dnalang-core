@@ -1,0 +1,141 @@
+{
+  "baseline_branch": "main",
+  "baseline_head": "bd58a5e7848d19cd61a8426edbfcc4bd35d88d26",
+  "environment": {
+    "dependencies": {
+      "numpy": "2.5.4",
+      "pytest": "9.2.0",
+      "qiskit": "2.6.2",
+      "qiskit-aer": "0.18.2",
+      "qiskit-ibm-runtime": "0.52.1",
+      "qiskit-qasm3-import": "0.6.0",
+      "scipy": "1.18.1",
+      "sympy": "1.14.0"
+    },
+    "platform": "Linux-6.18.58.1-microsoft-standard-WSL2-x86_64-with-glibc2.43",
+    "python_executable": "/home/osiris/osiris-assessment/venvs/osiris-cli/bin/python",
+    "python_version": "3.14.4"
+  },
+  "file_sha256": {
+    "dnalang/__init__.py": {
+      "bytes": 1706,
+      "sha256": "7bdfbebea3eb27f6849f0253dd073f1adfef21e375832cde1bda7ab7a453c01f"
+    },
+    "dnalang/ast.py": {
+      "bytes": 3416,
+      "sha256": "2297ec7422fc316cf485623a4559326b94287de27d6781aa561a0237cb62e31f"
+    },
+    "dnalang/backends/ibm.py": {
+      "bytes": 3143,
+      "sha256": "55d54d6bee1b29f26d20173e7a023236f6d9398b76b0899866c98f5509d3d3cc"
+    },
+    "dnalang/backends/qasm3.py": {
+      "bytes": 352,
+      "sha256": "f6327a1e12d4e8fd541728dd51168717079eb8c3702e2d233fddf0d29ff9acd9"
+    },
+    "dnalang/cli.py": {
+      "bytes": 5708,
+      "sha256": "f629d3cf2288fe752dfb8ed53784f43e4eaab60b591ed89a082870f847536de0"
+    },
+    "dnalang/conformance.py": {
+      "bytes": 14140,
+      "sha256": "7523dfa3a0216ec26d727a1f4b2f2762c2968839bbf26f5c819fd5680756cc93"
+    },
+    "dnalang/lower.py": {
+      "bytes": 2439,
+      "sha256": "a88d118ea1c95bb6331371cb9232aa063fe4ad5b2e708372406dd8c707fa4af1"
+    },
+    "dnalang/parser.py": {
+      "bytes": 12850,
+      "sha256": "1b8774f853b27d3ee6498dc44d3ed263c700fac334c8f4b8a2922c30e1955df4"
+    },
+    "dnalang/qc_ir.py": {
+      "bytes": 15084,
+      "sha256": "48839ac285160786a4a90131f2e89b5045fd5c8adc7ad9ffeb0748e59aa2cccd"
+    },
+    "dnalang/sema.py": {
+      "bytes": 17203,
+      "sha256": "7becb5779ec739fe4f76ecaf5de10034cc84f621901d1027514a006f1dcaf001"
+    },
+    "dnalang/timing.py": {
+      "bytes": 9367,
+      "sha256": "456b1f7f4846d40a1130ede1ebe8ccd7029833ca98a66954fed605ec601b10e3"
+    },
+    "docs/COMPILER_TIMING_CONTRACT.md": {
+      "bytes": 4269,
+      "sha256": "64b5c08f00150c9969a2c1e430c68b5f79b7a490ea2fd58a385af366babef2d6"
+    },
+    "tests/test_sprint1_compiler_timing_contract.py": {
+      "bytes": 20980,
+      "sha256": "e047b5f86c9da68ca3a62da53b0781be15a7718bd30eab287ff100f70d584a93"
+    }
+  },
+  "fixture_artifacts": {
+    "bell.dna": {
+      "canonical_ir_sha256": "4413d4795f43bc39ac9095413752e3e6fe91a19ad660342ab985b2fc88ebe474",
+      "n_cbits": 2,
+      "n_ops": 5,
+      "n_qubits": 2,
+      "qasm3_dt50ns_sha256": "0f0635392258fd22ba817b8b9be6b919b7a4a978ae8d4a46470cc959696fff48",
+      "qasm3_physical_sha256": "0f0635392258fd22ba817b8b9be6b919b7a4a978ae8d4a46470cc959696fff48"
+    },
+    "dd_staggered_xy4.dna": {
+      "canonical_ir_sha256": "b4ed50518ca87a69ff9376d2ec96c1cc814edcf80db4a3c0bbe3a0fbce865a01",
+      "n_cbits": 4,
+      "n_ops": 82,
+      "n_qubits": 4,
+      "qasm3_dt50ns_sha256": "761aa3a42a1c38f64cc155f1937bdfa62309fd008efa3cc169b1c3a94fbe1388",
+      "qasm3_physical_sha256": "67a89460be22c2664bf6ba36fe1d6ccb0c9b595a5d295943bc8a13dfe01553e8"
+    },
+    "ghz.dna": {
+      "canonical_ir_sha256": "b695476a3a40595f2f2dc1e679372e5c5ea2f49b8c1b58ee800d1c06bc3ad9d8",
+      "n_cbits": 4,
+      "n_ops": 21,
+      "n_qubits": 4,
+      "qasm3_dt50ns_sha256": "7b57098be457c5ed66d48aab6708d4cd121c1b3b8619281a563d7d8689fa83f2",
+      "qasm3_physical_sha256": "7b57098be457c5ed66d48aab6708d4cd121c1b3b8619281a563d7d8689fa83f2"
+    }
+  },
+  "repository": "/home/osiris/osiris-assessment/work/dnalang-core",
+  "sprint": "SPRINT-1-PLAN",
+  "stage_scope_note": "Verified stages: parse -> sema.check -> lower -> Circuit.validate -> Circuit.resolve_timing(exact|quantize) -> OpenQASM 3.0 & untranspiled qiskit.QuantumCircuit. Vendor remote hardware transpilation on ibm_* requires IBM_QUANTUM_TOKEN and is not claimed.",
+  "target_branch": "feat/sprint1-compiler-timing-contract",
+  "test_execution": {
+    "baseline": {
+      "command": "/home/osiris/osiris-assessment/venvs/osiris-cli/bin/pytest -v",
+      "elapsed_s": 15.59,
+      "failed": 0,
+      "passed": 89,
+      "skipped": 0
+    },
+    "final": {
+      "command": "PYTHONPATH=/home/osiris/osiris-assessment/work/dnalang-core /home/osiris/osiris-assessment/venvs/osiris-cli/bin/pytest -v",
+      "elapsed_s": 14.26,
+      "failed": 0,
+      "passed": 102,
+      "skipped": 0,
+      "sprint1_regression_cases_verified": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ]
+    }
+  },
+  "work_items": [
+    "S1-01",
+    "S1-02",
+    "S1-03",
+    "S1-04",
+    "S1-05",
+    "S1-06"
+  ]
+}

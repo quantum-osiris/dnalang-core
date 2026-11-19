@@ -28,10 +28,12 @@ Grammar (EBNF; also in docs/LANGUAGE.md):
 """
 from __future__ import annotations
 
+from fractions import Fraction
 from typing import List, Optional
 
 from . import ast as A
 from .lexer import GATE_ALIASES, Token, tokenize
+from .timing import parse_number_token_exact
 
 _UNIT = {"ns": 1e-9, "us": 1e-6, "ms": 1e-3, "s": 1.0}
 
@@ -256,9 +258,9 @@ class Parser:
                         self.expect("SYM", ",")
             self.expect("SYM", "@")
             self.expect("SYM", "[")
-            qs = [self._int(self.expect("NUMBER"))]
+            qs = [self._qubit_index()]
             while self.accept("SYM", ","):
-                qs.append(self._int(self.expect("NUMBER")))
+                qs.append(self._qubit_index())
             self.expect("SYM", "]")
             self.expect("SYM", ";")
             out.append(A.GeneInstance(t.text, args, qs, t.pos))
@@ -283,14 +285,15 @@ class Parser:
         t = self.cur
         if t.kind == "SYM" and t.text == "-":
             self.i += 1
-            return A.BinOp("-", A.Const(0.0, t.pos), self.unary(), t.pos)
+            return A.BinOp("-", A.Const(0.0, t.pos, exact=Fraction(0, 1), dim="zero"), self.unary(), t.pos)
         return self.primary()
 
     def primary(self) -> A.Expr:
         t = self.cur
         if t.kind == "NUMBER":
             self.i += 1
-            return A.Const(self._number(t), t.pos)
+            exact_val, dim = parse_number_token_exact(t.text)
+            return A.Const(float(exact_val), t.pos, exact=exact_val, dim=dim)
         if t.kind == "IDENT":
             self.i += 1
             if self.accept("SYM", "("):
@@ -311,17 +314,19 @@ class Parser:
 
     # --- literals -----------------------------------------------------------
     def _number(self, t: Token) -> float:
-        s = t.text
-        for u, f in _UNIT.items():
-            if s.endswith(u) and not s.endswith("e" + u):
-                return float(s[:-len(u)]) * f
-        return float(s)
+        exact_val, _ = parse_number_token_exact(t.text)
+        return float(exact_val)
 
     def _int(self, t: Token) -> int:
-        v = self._number(t)
-        if v != int(v):
+        exact_val, dim = parse_number_token_exact(t.text)
+        if dim == "duration" or exact_val.denominator != 1:
             self.err("expected an integer", t)
-        return int(v)
+        return int(exact_val.numerator)
+
+    def _qubit_index(self) -> int:
+        neg = self.accept("SYM", "-") is not None
+        val = self._int(self.expect("NUMBER"))
+        return -val if neg else val
 
 
 def parse(src: str) -> A.Organism:
