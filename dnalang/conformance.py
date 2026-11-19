@@ -28,6 +28,8 @@ import random
 import sys
 from collections import Counter
 from dataclasses import dataclass, field
+from decimal import Decimal
+from fractions import Fraction
 from typing import Callable, Dict, List, Optional, Tuple
 
 import numpy as np
@@ -45,7 +47,7 @@ SPELLINGS = {
 }
 ROTATIONS = {"rx", "ry", "rz"}
 TWO_QUBIT = {"cx", "cz", "swap"}
-UNITS = {"ns": 1e-9, "us": 1e-6, "ms": 1e-3}
+UNITS = {"ns": Fraction(1, 1_000_000_000), "us": Fraction(1, 1_000_000), "ms": Fraction(1, 1_000)}
 
 Expr = Tuple[str, Callable[[Dict[str, float]], float]]   # source text, value in an env
 
@@ -165,10 +167,11 @@ def _gene(rng: random.Random, index: int, max_ports: int) -> _Gene:
             unit = rng.choice(list(UNITS))
             amount = f"{rng.randint(1, 999)}.{rng.randint(0, 9)}"
             ports = rng.sample(g.ports, rng.randint(1, len(g.ports)))
-            seconds = float(amount) * UNITS[unit]
+            exact_s = Fraction(Decimal(amount)) * UNITS[unit]
+            seconds = float(exact_s)
             g.body.append(f"wait({amount}{unit}) {', '.join(ports)};")
-            g.meaning.append(lambda env, pm, cb, ports=ports, d=seconds: [
-                Op("delay", (pm[p],), duration_s=d) for p in ports])
+            g.meaning.append(lambda env, pm, cb, ports=ports, d=seconds, ex=exact_s: [
+                Op("delay", (pm[p],), duration_s=d, duration_exact_s=ex) for p in ports])
         elif kind == "echo":
             pauli = rng.choice("XY")
             ports = rng.sample(g.ports, rng.randint(1, len(g.ports)))

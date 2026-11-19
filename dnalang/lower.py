@@ -1,9 +1,8 @@
 """Lower an Organism AST to the flat circuit IR.
 
 Total and deterministic: each genome instance instantiates its gene template with
-constant-folded arguments, renames ports to physical qubits, and appends the
-resulting ops. A barrier separates gene instances so later passes can see gene
-boundaries; `strip_barriers()` removes them.
+constant-folded arguments (preserving exact rational durations), renames ports to
+physical qubits, appends the resulting ops, and validates the resulting logical IR.
 """
 from __future__ import annotations
 
@@ -11,7 +10,7 @@ from typing import Dict
 
 from . import ast as A
 from .qc_ir import Circuit, Op
-from .sema import SemaError, check, eval_expr
+from .sema import SemaError, TypedValue, check, eval_typed_expr
 
 
 def lower(org: A.Organism, *, gene_barriers: bool = True) -> Circuit:
@@ -24,16 +23,25 @@ def lower(org: A.Organism, *, gene_barriers: bool = True) -> Circuit:
     cbit_index = 0
     for inst in org.genome:
         g = genes[inst.gene]
-        env = {p.name: eval_expr(a, {}) for p, a in zip(g.params, inst.args)}
+        env: Dict[str, TypedValue] = {
+            p.name: eval_typed_expr(a, {}) for p, a in zip(g.params, inst.args)
+        }
         port = dict(zip(g.ports, inst.qubits))
         for s in g.body:
             if isinstance(s, A.Gate):
-                circ.ops.append(Op(s.op, tuple(port[q] for q in s.qubits),
-                                   tuple(eval_expr(a, env) for a in s.args)))
+                circ.ops.append(
+                    Op(
+                        s.op,
+                        tuple(port[q] for q in s.qubits),
+                        tuple(eval_typed_expr(a, env).value for a in s.args),
+                    )
+                )
             elif isinstance(s, A.Wait):
-                d = eval_expr(s.duration, env)
+                wt = eval_typed_expr(s.duration, env)
                 for q in s.qubits:
-                    circ.ops.append(Op("delay", (port[q],), duration_s=d))
+                    circ.ops.append(
+                        Op("delay", (port[q],), duration_s=wt.value, duration_exact_s=wt.exact)
+                    )
             elif isinstance(s, A.Echo):
                 for q in s.qubits:
                     circ.ops.append(Op(s.pauli.lower(), (port[q],)))
@@ -44,8 +52,13 @@ def lower(org: A.Organism, *, gene_barriers: bool = True) -> Circuit:
                 circ.ops.append(Op("barrier", tuple(port[q] for q in s.qubits)))
         if gene_barriers:
             circ.ops.append(Op("barrier", tuple(inst.qubits)))
-    return circ
+    return circ.validate()
 
 
 def strip_barriers(circ: Circuit) -> Circuit:
-    return Circuit(circ.n_qubits, circ.n_cbits, [o for o in circ.ops if o.name != "barrier"], circ.name)
+    return Circuit(
+        circ.n_qubits,
+        circ.n_cbits,
+        [o for o in circ.ops if o.name != "barrier"],
+        circ.name,
+    )

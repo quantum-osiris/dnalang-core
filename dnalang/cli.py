@@ -10,6 +10,7 @@ from . import Ledger, check, lower, parse
 from .lexer import LexError
 from .parser import ParseError
 from .sema import SemaError
+from .timing import CompilerContractError
 
 
 def _load(path: str):
@@ -45,7 +46,9 @@ def main(argv=None):
         if name == "run":
             p.add_argument("--shots", type=int, default=1024); p.add_argument("--seed", type=int)
         if name == "qasm":
-            p.add_argument("--dt", type=float)
+            p.add_argument("--dt")
+            p.add_argument("--timing-policy", choices=("exact", "quantize"), default="exact")
+            p.add_argument("--require-dt", action="store_true")
         if name == "check":
             p.add_argument("--invariance", action="store_true",
                            help="symbolic audit: flag angle parameters no outcome can depend on (needs sympy)")
@@ -105,7 +108,11 @@ def main(argv=None):
         for o in circ.ops: print(" ", o.name, list(o.qubits), list(o.params) if o.params else "", f"{o.duration_s*1e9:.1f}ns" if o.duration_s else "", f"-> c{o.cbit}" if o.cbit is not None else "")
         return 0
     if a.cmd == "qasm":
-        print(circ.to_qasm3(a.dt), end=""); return 0
+        try:
+            print(circ.to_qasm3(a.dt, timing_policy=a.timing_policy, require_dt=a.require_dt), end="")
+        except CompilerContractError as e:
+            sys.exit(f"error: {e}")
+        return 0
     if a.cmd == "run":
         from .backends import aer
         counts = aer.run([circ], shots=a.shots, seed=a.seed)[0]

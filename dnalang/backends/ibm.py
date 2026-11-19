@@ -39,7 +39,7 @@ def transpile_fixed(circuits: List[Circuit], backend, layout: Sequence[int], opt
     pm = generate_preset_pass_manager(optimization_level=optimization_level, backend=backend,
                                       initial_layout=list(layout), layout_method="trivial",
                                       routing_method="none", seed_transpiler=1)
-    return [pm.run(c.to_qiskit(dt)) for c in circuits]
+    return [pm.run(c.to_qiskit(dt, timing_policy="quantize")) for c in circuits]
 
 
 def submit(circuits: List[Circuit], backend_name: str, layout: Sequence[int], shots: int,
