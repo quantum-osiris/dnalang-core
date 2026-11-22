@@ -19,7 +19,7 @@ from __future__ import annotations
 import enum
 import hashlib
 import json
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
 
 from pytket import Circuit, OpType
@@ -204,7 +204,6 @@ class WenPlaquetteFeedForwardPass:
 
     def to_tket_pass(self) -> CustomPass:
         def transform(circ: Circuit) -> Circuit:
-            out = circ.copy()
             protocol = self.build_protocol_circuit()
             # The protocol needs its own 20-qubit frame; append via circbox-free
             # composition is not meaningful for mismatched widths, so the pass
